@@ -1,5 +1,6 @@
 package com.example.lab_week_13
 
+import MovieRepository
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.lab_week_13.model.Movie
