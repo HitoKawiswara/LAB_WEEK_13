@@ -1,0 +1,57 @@
+Hito Kawiswara (00000068541) - Assignment LAB Week 13
+
+Jawaban:
+1). MVVM penting karena memisahkan tanggung jawab antara tampilan (UI), data, dan logika. Dengan pemisahan ini, kode jadi lebih mudah dirawat, dites, dan dikembangkan. View tidak perlu tahu data diambil dari mana, Model tidak perlu tahu data ditampilkan bagaimana, dan ViewModel menjadi penghubung yang menyiapkan data supaya siap dipakai di UI.
+
+Implementasi di proyek ini:
+a. Model:
+- Movie.kt (model data)
+- MovieDao.kt (data access object untuk Room)
+- MovieDatabase.kt (database Room)
+- MovieRepository.kt (abstraksi sumber data yang menggabungkan API dan database)
+- MovieService.kt dan kelas API terkait (service Retrofit)
+
+b. View:
+- activity_main.xml (layout layar utama)
+- view_movie_item.xml (layout item untuk tiap film di list)
+- MainActivity.kt (UI controller yang meng-setup binding, adapter, dan navigasi)
+- DetailsActivity.kt (UI untuk menampilkan detail film)
+- MovieAdapter.kt (RecyclerView adapter yang mengikat data Movie ke tampilan item)
+
+c. ViewModel:
+- MovieViewModel.kt (menyimpan data untuk UI, mengekspos StateFlow/LiveData berisi daftar film dan error, serta memanggil MovieRepository)
+
+2). Data Binding lebih efisien dibanding metode biasa (findViewById + set data manual) karena:
+- Mengurangi boilerplate: view bisa langsung di-*bind* ke properti di ViewModel melalui XML, jadi tidak perlu lagi memanggil findViewById dan setText/setImage satu per satu di Activity.
+- Logika UI lebih bersih: layout bisa langsung mengamati data di ViewModel (misalnya: `app:list="@{viewModel.popularMovies}"`) dan akan otomatis ter-update ketika datanya berubah.
+- Lebih aman secara tipe: kelas binding yang di-*generate* (misalnya ActivityMainBinding) memberikan jaminan tipe dan id view pada waktu kompilasi, tidak seperti findViewById yang rawan typo dan cast.
+- View jadi lebih deklaratif: layout langsung mendeskripsikan “data apa yang ditampilkan”, bukan “langkah-langkah cara meng-update UI”, sehingga lebih mudah dibaca dan dirawat.
+
+3). Singleton Pattern penting untuk instance Room database karena:
+- Pembuatan database Room itu mahal. Dengan hanya satu instance, kita menghindari pembuatan objek database berulang-ulang, sehingga lebih efisien secara performa.
+- Mencegah race condition dan ketidakkonsistenan data. Dengan menggunakan `@Volatile` dan `synchronized` di `MovieDatabase.getInstance`, semua thread dijamin memakai instance database yang sama dan selalu melihat nilai terbaru.
+- Menjamin satu sumber kebenaran (single source of truth) untuk data yang di-cache. Semua bagian aplikasi membaca dan menulis ke instance MovieDatabase yang sama, sehingga data lokal tetap konsisten.
+
+4). Di Part 2 & 3, Repository Pattern penting karena menyediakan lapisan abstraksi di atas sumber data dan memusatkan seluruh akses data di satu tempat.
+
+Manfaatnya dalam proyek ini:
+- Menyembunyikan detail sumber data dari ViewModel. MovieViewModel hanya perlu memanggil `movieRepository.fetchMovies()` atau `fetchMoviesFromNetwork()`, tanpa perlu peduli apakah data berasal dari API atau Room.
+- Menggabungkan beberapa sumber data di balik satu API. Repository akan mengecek database lokal (Room) terlebih dahulu. Jika kosong, ia memanggil API (Retrofit), menyimpan hasilnya ke database, lalu mengembalikan data ke pemanggil.
+- Memudahkan perubahan dan pengujian. Jika nanti API berubah, atau strategi caching diubah (misalnya ditambah expiry time), perubahan utamanya cukup di MovieRepository, bukan di banyak Activity/ViewModel.
+- Mendukung konsep “single source of truth”. Semua yang butuh data film wajib lewat MovieRepository, sehingga aturan kapan data di-refresh dan disimpan bisa dikontrol di satu tempat.
+
+Singkatnya, Repository Pattern menjaga ViewModel tetap fokus ke logika presentasi, sementara detail pengambilan dan penyimpanan data disembunyikan di dalam Repository.
+
+5). Ada, WorkManager memang solusi yang direkomendasikan untuk pekerjaan background yang periodik dan tetap jalan walaupun aplikasi ditutup, tetapi bukan satu-satunya cara.
+
+Beberapa alternatif lain:
+a. Refresh manual di UI:
+- Menyediakan tombol “Refresh” atau fitur pull-to-refresh yang ketika ditekan memanggil fungsi di ViewModel untuk mengambil data terbaru dari API lalu meng-update database.
+b. Refresh saat aplikasi dibuka atau saat onResume:
+- Setiap kali Activity/Fragment dibuka atau di-*resume*, aplikasi bisa mengecek kapan terakhir kali data diambil. Jika sudah terlalu lama, aplikasi memanggil API lagi dan memperbarui database.
+c. Menggunakan AlarmManager:
+- Menjadwalkan alarm berulang yang memicu BroadcastReceiver atau Service untuk mengambil data secara periodik. Pendekatan ini lebih low-level dan kurang nyaman dibanding WorkManager, serta harus mengurus sendiri berbagai edge case.
+d. Menggunakan mekanisme *push*:
+- Jika backend mendukung, server bisa mengirim notifikasi (misalnya via FCM) ketika ada data baru, lalu aplikasi merespons dengan memanggil API dan meng-update database.
+
+Namun untuk tugas seperti di lab ini, WorkManager tetap pilihan yang paling rapi karena ia sudah mengurus sendiri hal-hal seperti kondisi jaringan, penghematan baterai, dan device restart.
