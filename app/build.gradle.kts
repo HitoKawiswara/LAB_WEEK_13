@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.test_lab_week_12"
+    namespace = "com.example.lab_week_13"
     compileSdk = 36
 
     defaultConfig {
@@ -34,6 +34,11 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
+
+    buildFeatures{
+        dataBinding = true
+    }
+
 }
 
 dependencies {

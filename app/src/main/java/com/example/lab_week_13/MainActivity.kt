@@ -1,4 +1,4 @@
-package com.example.test_lab_week_12
+package com.example.lab_week_13
 
 import android.R.id.message
 import android.content.Intent
@@ -10,7 +10,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.RecyclerView
-import com.example.test_lab_week_12.model.Movie
+import com.example.lab_week_13.model.Movie
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 
